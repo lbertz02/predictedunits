@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC4006 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4006.xml">
+<!ENTITY RFC6733 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6733.xml">
+<!ENTITY RFC7155 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7155.xml">
+]>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<?rfc toc="yes" ?>
+<?rfc symrefs="yes" ?>
+<?rfc sortrefs="yes"?>
+<?rfc iprnotified="no" ?>
+<?rfc strict="no" ?>
+<?rfc compact="yes" ?>
+<?rfc subcompact="no" ?>
+
+<rfc category="info" docName="draft-bertz-dime-predictunits-00" ipr="pre5378Trust200902">
+ <front>
+   <title>Diameter Domain and Arbitrary Mask Filters</title>
+
+   <author fullname="Lyle Bertz" initials="L." surname="Bertz">
+     <organization>Sprint</organization>
+     <address>
+       <postal>
+         <street>6220 Sprint Parkway</street>
+         <city>Overland Park</city>
+         <region>KS</region>
+         <code>66251</code>
+         <country>United States</country>
+       </postal>
+       <email>lylebe551144@gmail.com</email>
+     </address>
+   </author>
+
+   <date year="2016" />
+
+   <area>Operations and Management Area</area>
+
+   <workgroup>Diameter Maintenance and Extensions</workgroup>
+
+   <keyword>diameter</keyword>
+   <keyword>charging</keyword>
+
+   <abstract>
+<t>
+    This document specifies the conveyance of predicted usage
+    information for proper dimensioning of network services
+    that use Diameter based authorization.
+</t>
+   </abstract>
+ </front>
+
+  <middle>
+   <section title="Introduction" anchor="intro">
+<t>
+   When a User is authorized to use a service via Diameter
+   applications such as <xref target="RFC4006"/> or <xref target="RFC7155"/>, the Client is
+   not aware of the average load placed upon it by User.  This can
+   lead to overload situations or the Diameter Client redirecting or
+   denying services to valid Users even though their presence may
+   overload the service.
+</t>
+<t>
+   Given virtualization and the use of many software based services
+   the service capacity varies on a service instance, i.e. Diameter
+   Client, basis.
+</t>
+<t>
+   This specification introduces the Predicted-Service-Units
+   Attribute Value Pair (AVP).  This information conveys the
+   predicted usage introduced on the service by the authorized User.
+   Such information can be used by the Diameter Client to estimate
+   future load and proactively manage its resources.
+</t>
+<t>
+   Although this informaiton is conveyed from the Diameter Server to
+   the Client several system aspects are out of the scope of this
+   document:
+  <list style="symbols">
+<t>
+   How the Diameter Server acquired the information contained in the
+   Predicted-Service-UnitsAVP.
+</t>
+<t>
+   How the values in the Predicted-Service-Units AVP were determined.
+</t>
+<t>
+   The accuracy or validity of the values in the
+   Predicted-Service-Units AVP.
+</t>
+<t>
+   Specific actions the Diameter Client should take when its service
+   functions are overloaded.
+</t>
+<t>
+   Specific actions the Diameter Client takes to bring itself in/out
+   of service for new or existing Users.
+</t>
+  </list>
+</t>
+   </section>
+   <section title="Terminology" anchor="terms" >
+<t>
+    In this document, the key words "MAY", "MUST", "MUST NOT", "OPTIONAL",
+    "RECOMMENDED", "SHOULD", and "SHOULD NOT", are to be interpreted as
+    described in <xref target="RFC2119"/>.
+</t>
+   </section>
+<section title="Predicted Service AVPs" anchor="avps">
+   <section title="Predicted-Service-Units" anchor="predictedunits">
+  <t>
+   The Predicted-Service-Units AVP (AVP Code TBD1) is of type Grouped and
+   contains the amount of units that the Diameter credit-control client
+   can expect to provide to the end user until the service must be
+   released or the new Credit-Control-Request must be sent, if a
+   Granted-Service-Unit AVP <xref target="RFC4006"/> has been applied
+   to the user's service.  A client is not required to implement all
+   of the unit types, and it must ingore unknown or unsupported unit
+   types.
+</t>
+<t>
+   The Predicted-Service-Units AVP is defined as follows (per the grouped-
+   avp-def of <xref target="RFC6733"/>):
+</t>
+<figure><artwork><![CDATA[
+         Predicted-Service-Units ::= < AVP Header: TBD1 >
+                                    [ CC-Time ]
+                                    [ CC-Money ]
+                                    [ CC-Total-Octets ]
+                                    [ CC-Input-Octets ]
+                                    [ CC-Output-Octets ]
+                                    [ CC-Service-Specific-Units ]
+                                   *[ Service-Cost-Information ]
+                                   *[ AVP ]
+
+]]>
+</artwork></figure>
+<t>
+    With the exception of the Service-Cost-Information AVP, all AVPs
+    are defined in <xref target="RFC4006"/>.
+</t>
+<t>
+    The presence of this information is provided as anticipated load
+    information to the Diameter Client and is not intended to be
+    prescriptive in any manner regarding the user's service.
+</t>
+   </section>
+   <section title="Service-Cost-Information" anchor="servicecost">
+<t>
+   The Service-Cost-Information AVP (AVP Code TBD2) is of type
+   Grouped, and it is used to return the service cost information,
+   which the client can use, if it understands it, for various
+   purposes inclduing load prediction and sizing.
+</t>
+<t>
+   A client is not required to implement all
+   of the unit types, and it must ingore unknown or unsupported unit
+   types.
+</t>
+<t>
+   It is defined as follows (per the grouped-avp-def of [RFC6733]):
+</t>
+<figure><artwork><![CDATA[
+          Service-Cost-Information ::= < AVP Header: TBD2 >
+                                     { Unit-Value }
+                                     { Cost-Unit }
+                                     { Service-Dimension }
+]]>
+</artwork></figure>
+<t>
+    Unit-Value and Cost-Unit are defined in <xref target="RFC4006"/>.
+</t>
+  </section>
+  <section title="Service-Dimension" anchor="servicedim">
+<t>
+    The Service-Dimension AVP (AVP Code TBD3) is of type UTF8String.
+    It specifies the applicable service type (dimension) to the
+    Service-Cost-Information.
+</t>
+  </section>
+</section>
+<section title="Usage Examples" anchor="usage">
+<t>
+    When Predicted-Service-Units are returned as part of an
+    authorization per <xref target="RFC7155"/> or <xref target="RFC4006"/>, the client MAY use
+    this information as guidance on projected load the new
+    user will generate on the service.
+</t>
+<t>
+    If the client supports/understnds the information provided in the
+    Predicted-Service-Units AVP, it can update it's projected load.
+    Based upon this information it MAY take one or more of the
+    following actions (this is not exhaustive):
+<list style="symbols">
+<t>
+    Redirect at the service / protocol level any new service requests.
+</t>
+<t>
+    Begin enforcing mechanisms to reduce the amount of service load
+    on a subset of services already established.
+</t>
+<t>
+    Remove itself from any system that directs new service requests
+    to it.
+</t>
+<t>
+    Initiate administrative functions to increase its capacity or
+    start the process of creating new intances to service requests.
+</t>
+</list>
+</t>
+</section>
+
+   <section anchor="IANA" title="IANA Considerations">
+<t>
+   IANA allocated AVP codes in the IANA-controlled namespace registry
+   specified in Section 11.1.1 of <xref target="RFC6733"/> for the following AVPs that
+   are defined in this document.
+</t>
+<texttable>
+  <ttcol>AVP</ttcol>
+  <ttcol>AVP Code</ttcol>
+  <ttcol>Section Defined</ttcol>
+  <ttcol>Data Type</ttcol>
+
+  <c>Predicted-Service-Units</c>
+  <c>TBD1</c>
+  <c><xref target="predictedunits"/></c>
+  <c>GROUPED</c>
+
+  <c>Service-Cost-Information</c>
+  <c>TBD2</c>
+  <c><xref target="servicecost"/></c>
+  <c>GROUPED</c>
+
+  <c>Service-Dimension</c>
+  <c>TBD3</c>
+  <c><xref target="servicecost"/></c>
+  <c>UTF8String</c>
+</texttable>
+   </section>
+
+   <section anchor="Security" title="Security Considerations">
+<t>
+   The Diameter base protocol <xref target="RFC6733"/> requires that each Diameter
+   implementation use underlying security; i.e., TLS/TCP, DTLS/SCTP or IPsec.  These
+   mechanisms are believed to provide sufficient protection under the
+   normal Internet threat model; that is, assuming that the authorized
+   nodes engaging in the protocol have not been compromised, but that
+   the attacker has complete control over the communication channels
+   between them.  This includes eavesdropping, message modification,
+   insertion, and man-in-the-middle and replay attacks.  Note also that
+   this application includes a mechanism for application layer replay
+   protection by means of the Session-Id from <xref target="RFC6733"/> and CC-
+   Request-Number, which is specified in this document.  The Diameter
+   credit-control application is often used within one domain, and there
+   may be a single hop between the peers.  In these environments, the
+   use of TLS/TCP, DTLS/SCTP or IPsec is sufficient.  The details of TLS/TCP, DTLS/SCTP or IPsec
+   related security considerations are discussed in the <xref target="RFC6733"/>.
+</t>
+<t>
+   Because this application conveys past usage information (directly or
+   indirectly), it increases the interest for various security attacks.
+   Therefore, all parties communicating with each other MUST be
+   authenticated, including, for instance, TLS client-side
+   authentication.  In addition, authorization of the client SHOULD be
+   emphasized; i.e., that the client is allowed to perform credit-
+   control for a certain user.  The specific means of authorization are
+   outside of the scope of this specification but can be, for instance,
+   manual configuration.
+</t>
+<t>
+    The attributes provided by this solution MUST be assumed to be
+    privacy sensitive by both the client and server.
+</t>
+   </section>
+ </middle>
+
+ <back>
+
+   <references title="Normative References">
+     &RFC2119;
+
+     &RFC4006;
+
+     &RFC6733;
+   </references>
+
+   <references title="Informative References">
+     &RFC7155;
+   </references>
+ </back>
+</rfc>
