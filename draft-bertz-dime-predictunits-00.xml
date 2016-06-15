@@ -16,7 +16,7 @@
 
 <rfc category="info" docName="draft-bertz-dime-predictunits-00" ipr="pre5378Trust200902">
  <front>
-   <title>Diameter Domain and Arbitrary Mask Filters</title>
+   <title>Diameter Predicted Units</title>
 
    <author fullname="Lyle Bertz" initials="L." surname="Bertz">
      <organization>Sprint</organization>
