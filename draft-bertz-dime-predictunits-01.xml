@@ -2,6 +2,7 @@
 <!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
 <!ENTITY RFC4006 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4006.xml">
+<!ENTITY RFC5777 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5777.xml">
 <!ENTITY RFC6733 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6733.xml">
 <!ENTITY RFC7155 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7155.xml">
 ]>
@@ -14,7 +15,7 @@
 <?rfc compact="yes" ?>
 <?rfc subcompact="no" ?>
 
-<rfc category="info" docName="draft-bertz-dime-predictunits-00" ipr="pre5378Trust200902">
+<rfc category="std" docName="draft-bertz-dime-predictunits-01" ipr="pre5378Trust200902">
  <front>
    <title>Diameter Predicted Units</title>
 
@@ -32,7 +33,7 @@
      </address>
    </author>
 
-   <date year="2016" />
+   <date year="2017" />
 
    <area>Operations and Management Area</area>
 
@@ -79,7 +80,7 @@
   <list style="symbols">
 <t>
    How the Diameter Server acquired the information contained in the
-   Predicted-Service-UnitsAVP.
+   Predicted-Service-Units AVP.
 </t>
 <t>
    How the values in the Predicted-Service-Units AVP were determined.
@@ -98,6 +99,13 @@
 </t>
   </list>
 </t>
+<t>When the value(s) or multiple types of Costs are provided they are
+     represented by the Time-Of-Day-Condition AVP defined in <xref target="RFC5777"/>
+     and contained in a Predicted-Service-Units-Series AVP.  This AVP
+     contains one or more Predicted-Service-Units.  Multiple Cost types,
+     e.g. CC-Total-Octets and CC-Time, may be represented in the same
+     Predicted-Service-Units entry and in the same Predicted-Service-Units-Series
+     so long as no overlapping times exist for the same Cost Type.</t>
    </section>
    <section title="Terminology" anchor="terms" >
 <t>
@@ -115,7 +123,7 @@
    released or the new Credit-Control-Request must be sent, if a
    Granted-Service-Unit AVP <xref target="RFC4006"/> has been applied
    to the user's service.  A client is not required to implement all
-   of the unit types, and it must ingore unknown or unsupported unit
+   of the unit types, and it MUST ignore unknown or unsupported unit
    types.
 </t>
 <t>
@@ -130,13 +138,12 @@
                                     [ CC-Input-Octets ]
                                     [ CC-Output-Octets ]
                                     [ CC-Service-Specific-Units ]
-                                   *[ Service-Cost-Information ]
+                                    [ Time-Of-Day-Condition ]
                                    *[ AVP ]
-
 ]]>
 </artwork></figure>
 <t>
-    With the exception of the Service-Cost-Information AVP, all AVPs
+    The Time-Of-Day-Condition AVP is defined in <xref target="RFC5777"/>, all other AVPs
     are defined in <xref target="RFC4006"/>.
 </t>
 <t>
@@ -144,38 +151,36 @@
     information to the Diameter Client and is not intended to be
     prescriptive in any manner regarding the user's service.
 </t>
+<t>When the Time-Of-Day-Condition AVP is not present, the value(s) are assumed
+     to apply for the duration of the authorized session until this value is
+     updated as part of the Diameter application, e.g. a Diameter
+     Re-Auth-Request/Answer (RAR/RAA) message <xref target="RFC6733"/>.
+</t>
    </section>
-   <section title="Service-Cost-Information" anchor="servicecost">
+   <section title="Service-Cost-Information" anchor="psuseries">
 <t>
-   The Service-Cost-Information AVP (AVP Code TBD2) is of type
-   Grouped, and it is used to return the service cost information,
-   which the client can use, if it understands it, for various
-   purposes inclduing load prediction and sizing.
+   The Predicted-Service-Units AVP (AVP Code TBD2) is of type
+   Grouped, and contains one or more Predicted-Service-Units
+   with non-overlapping times for each specific Cost type..
 </t>
 <t>
    A client is not required to implement all
-   of the unit types, and it must ingore unknown or unsupported unit
+   of the unit types, and it MUST ingore unknown or unsupported unit
    types.
 </t>
 <t>
    It is defined as follows (per the grouped-avp-def of [RFC6733]):
 </t>
 <figure><artwork><![CDATA[
-          Service-Cost-Information ::= < AVP Header: TBD2 >
-                                     { Unit-Value }
-                                     { Cost-Unit }
-                                     { Service-Dimension }
+          Predicted-Service-Units-Series ::= < AVP Header: TBD2 >
+                                    1*{ Predicted-Service-Units }
 ]]>
 </artwork></figure>
 <t>
-    Unit-Value and Cost-Unit are defined in <xref target="RFC4006"/>.
-</t>
-  </section>
-  <section title="Service-Dimension" anchor="servicedim">
-<t>
-    The Service-Dimension AVP (AVP Code TBD3) is of type UTF8String.
-    It specifies the applicable service type (dimension) to the
-    Service-Cost-Information.
+  For each specific type of Cost, e.g. CC-Time, any two Predicted-Service-Units
+  values in the  series MUST NOT contain overlapping time windows specified in their
+  Time-Of-Day-Condition values.  When an entry has no Time-Of-Day-Condition present it
+  is assumed to apply at all times.
 </t>
   </section>
 </section>
@@ -188,7 +193,7 @@
 </t>
 <t>
     If the client supports/understnds the information provided in the
-    Predicted-Service-Units AVP, it can update it's projected load.
+    Predicted-Service-Units AVP, it can update its projected load.
     Based upon this information it MAY take one or more of the
     following actions (this is not exhaustive):
 <list style="symbols">
@@ -228,15 +233,10 @@
   <c><xref target="predictedunits"/></c>
   <c>GROUPED</c>
 
-  <c>Service-Cost-Information</c>
+  <c>Predicted-Service-Units-Series</c>
   <c>TBD2</c>
-  <c><xref target="servicecost"/></c>
+  <c><xref target="psuseries"/></c>
   <c>GROUPED</c>
-
-  <c>Service-Dimension</c>
-  <c>TBD3</c>
-  <c><xref target="servicecost"/></c>
-  <c>UTF8String</c>
 </texttable>
    </section>
 
@@ -282,6 +282,8 @@
      &RFC2119;
 
      &RFC4006;
+
+     &RFC5777;
 
      &RFC6733;
    </references>
